@@ -12,7 +12,7 @@ export default class App extends Component {
 
         this.state = {
             markers: props.section.markers,
-            align: this.config.align || 'centre',
+            align: this.config.align,
             currentMarker: null,
             backgroundAttachment: 'before'
         };
@@ -20,6 +20,15 @@ export default class App extends Component {
 
     componentDidMount() {
         __ODYSSEY__.scheduler.subscribe(this.onScroll);
+
+        // Make sure Twitter cards aren't too wide on mobile
+        setTimeout(() => {
+            Array.prototype.slice
+                .call(document.querySelectorAll(`.is-scrollyteller .twitter-tweet-rendered`))
+                .forEach(card => {
+                    card.style.setProperty('width', '100%');
+                });
+        }, 1000);
     }
 
     componentWillUnmount() {
@@ -36,7 +45,6 @@ export default class App extends Component {
         let lastSeenMarker = pastMarkers[pastMarkers.length - 1];
         if (!lastSeenMarker) lastSeenMarker = this.state.markers[0];
         if (this.state.currentMarker !== lastSeenMarker) {
-            // console.log('onScroll', lastSeenMarker, this.state.currentMarker);
             this.setState({
                 previousMarker: this.state.currentMarker,
                 currentMarker: lastSeenMarker
@@ -72,7 +80,10 @@ export default class App extends Component {
 
     render(props, { align, markers, previousMarker, currentMarker, isScrolling }) {
         return (
-            <div ref={el => (this.wrapper = el)} className={`Block is-richtext is-${align} is-piecemeal is-scrollyteller`}>
+            <div
+                ref={el => (this.wrapper = el)}
+                className={`Block is-piecemeal${align ? ` has-${align}` : ''} is-scrollyteller`}
+            >
                 <Background
                     isScrolling={isScrolling}
                     marker={currentMarker}
@@ -84,6 +95,7 @@ export default class App extends Component {
                         marker={marker}
                         reference={el => (marker.element = el)}
                         isCurrentMarker={currentMarker === marker}
+                        align={align}
                     />
                 ))}
             </div>
